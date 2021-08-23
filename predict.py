@@ -18,3 +18,29 @@ def predict_pic(data):
         return 1    #L
     else:
         return -1   #other
+
+if __name__ == "__main__":
+    import glob
+    import cv2
+    score = 0
+    mother = 0
+    files = glob.glob("../learn/cln-^/*.jpeg")
+    for f in files:
+        img = cv2.imread(f)
+        pre = predict_pic(img)
+        print(mother)
+        mother += 1 
+        if pre == 0:
+            score += 1
+    files = glob.glob("../learn/cln-L/*.jpeg")
+    for f in files:
+        img = cv2.imread(f)
+        pre = predict_pic(img)
+        print(mother)
+        mother += 1
+        if pre == 1:
+            score += 1
+    print(score,mother,score/mother)
+        
+     
+

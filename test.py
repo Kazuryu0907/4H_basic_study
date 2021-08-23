@@ -9,11 +9,11 @@ import cv2
 output_dir = ""
 def draw_images(generater,x,dir_name,index):
     save_name = "extened-"+str(index)
-    g = generater.flow(x,batch_size=1,save_to_dir=output_dir,save_prefix=save_name,save_format="jpeg")
+    g = generater.flow(x,batch_size=1,save_to_dir=dir_name,save_prefix=save_name,save_format="jpeg")
 
-    for i in range(50):
+    for i in range(10):
         batch = g.next()
-"""
+
 def expand2square(pil_img, background_color):
     width, height = pil_img.size
     if width == height:
@@ -35,32 +35,28 @@ def read_img(filename):
     #image = np.array(image,dtype=np.uint8)
 
     return image
-
-files = glob.glob("*.jpg")
-
-for f in files:
-    print(f)
-    img = read_img(f)
-    img.save("data/"+f)
-"""
-
+files = glob.glob(r"C:\Users\kazum\Desktop\cutted\learn\L\/*.jpg")
+for file in files:
+    img = cv2.imread("../sqmask/"+file.split("\\")[-1])
+    #cv2.imwrite(file,img)
 
 datagen = image.ImageDataGenerator(rotation_range=90,
                                     width_shift_range=20,
                                     height_shift_range=20,
-                                    zoom_range=0.1,
+                                    zoom_range=0.2,
                                     horizontal_flip=True,
                                     vertical_flip=True)
 
 files = ["^","L"]
-output_dir = "ado"
+output_dir = "cln"
 for f in files:
-    output_dir = "data/"+"ado-"+f
+    output_dir = "../learn/"+"cln-"+f
     if not(os.path.exists(output_dir)):
         os.mkdir(output_dir)
-    images = glob.glob("data/"+f+"/"+"*.jpg")
+    images = glob.glob("../learn/"+f+"/"+"*.jpg")
     for i in range(len(images)):
         img = image.load_img(images[i])
+        #img = img.convert("L")
         x = image.img_to_array(img)
         x = np.expand_dims(x,axis=0)
         #draw_images(datagen,x,output_dir,i)
@@ -79,7 +75,7 @@ def make_data(files):
 
 def add_data(cat,fname):
     img = cv2.imread(fname)
-    #img = cv2.cvtColor(img,cv2.COLORRGB)
+    #img = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
     data = np.asarray(img)
     X.append(data)
     Y.append(cat)
@@ -87,11 +83,7 @@ def add_data(cat,fname):
 allfiles = []
 
 for idx,cat in enumerate(categories):
-    image_dir = "data/"+cat
-    files = glob.glob(image_dir+"/*.jpg")
-    for f in files:
-        allfiles.append((idx,f))
-    image_dir = "data/"+"ado-"+cat
+    image_dir = "../learn/"+"cln-"+cat
     files = glob.glob(image_dir+"/*.jpeg")
     for f in files:
         allfiles.append((idx,f))
@@ -99,7 +91,7 @@ for idx,cat in enumerate(categories):
 print(len(allfiles))
 
 random.shuffle(allfiles)
-th = math.floor(len(allfiles)*0.8)
+th = math.floor(len(allfiles)*0.6)
 train = allfiles[:th]
 test = allfiles[th:]
 X_train,y_train = make_data(train)
@@ -107,7 +99,7 @@ X_test,y_test = make_data(test)
 xy = (X_train,X_test,y_train,y_test)
 if not(os.path.exists("saves/")):
     os.mkdir("saves/")
-np.savez("saves/tea_data.npy",X_train,X_test,y_train,y_test)
+#np.savez("saves/tea_data.npy",X_train,X_test,y_train,y_test)
 
 print(X_train.shape)
 print(X_test.shape)

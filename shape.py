@@ -129,18 +129,18 @@ def expand2square(pil_img, background_color):
         result.paste(pil_img, ((height - width) // 2, 0))
         return result
 
-cap = cv2.VideoCapture(0)
-cap.set(cv2.CAP_PROP_AUTOFOCUS, 1)
+#cap = cv2.VideoCapture(0)
+#cap.set(cv2.CAP_PROP_AUTOFOCUS, 1)
 #cap.set(cv2.CAP_PROP_FOURCC,cv2.VideoWriter_fourcc("H","2","6","4"))
 #cap.set(cv2.CAP_PROP_FRAME_WIDTH,1920)
 #cap.set(cv2.CAP_PROP_FRAME_HEIGHT,1080)
 while True:
-    _, img = cap.read()
+    #_, img = cap.read()
 
 
-    #img = cv2.imread(r"C:\Users\kazum\Desktop\Camera\IMG_20210421_145906.jpg",1)
+    img = cv2.imread(r"C:\Users\kazum\Desktop\Camera\IMG_20210421_145906.jpg",1)
     #ret,img = cap.read()
-    img = cv2.resize(img,(int(img.shape[1]/1),int(img.shape[0]/1)))
+    img = cv2.resize(img,(int(img.shape[1]/5),int(img.shape[0]/5)))
     img_original = img.copy()
     img_gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
     ret,img_binary = cv2.threshold(img_gray,127,255,cv2.THRESH_BINARY)
