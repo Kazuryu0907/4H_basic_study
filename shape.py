@@ -207,5 +207,5 @@ while True:
         #cv2.imwrite("rect.jpg",img)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
-cap.release()
+#cap.release()
 cv2.destroyAllWindows()

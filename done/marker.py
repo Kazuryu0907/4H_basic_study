@@ -8,7 +8,7 @@ img = cv2.imread("../data/IMG_20210705_162224.jpg")
 img = cv2.resize(img,(img.shape[1]//5,img.shape[0]//5))
 
 corners,ids,rejectedImgPoints = aruco.detectMarkers(img,dictionary)
-print(ids,corners)
+print(ids,corners[1][0])
 
 input_corners = np.array([[229.,216.], [874.,201.], [155.,666.], [950.,661.]],dtype=np.float32)
 W = 1000
@@ -19,7 +19,8 @@ rst = cv2.warpPerspective(img,M,(W,H))
 #cv2.imwrite("rest.png",rst)
 
 aruco.drawDetectedMarkers(img,corners,ids,(0,255,0))
-
+print(type(rst))
 cv2.imshow("result.png",img)
+cv2.imshow("r",rst)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
