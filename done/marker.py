@@ -3,7 +3,7 @@ import numpy as np
 aruco = cv2.aruco
 
 dictionary = aruco.getPredefinedDictionary(aruco.DICT_4X4_50)
-img = cv2.imread("../data/IMG_20210705_162224.jpg")
+img = cv2.imread(r"C:\Users\kazum\Desktop\cutted\src\sample.jpg")
 
 img = cv2.resize(img,(img.shape[1]//5,img.shape[0]//5))
 
