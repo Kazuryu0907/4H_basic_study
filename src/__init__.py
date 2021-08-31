@@ -1,1 +1,1 @@
-import getMarker
+from .getMarker import Marker

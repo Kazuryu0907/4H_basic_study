@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import itertools
 
-class getMarker:
+class Marker:
     """
     画像からマーカー内部の画像をトリミングする
 

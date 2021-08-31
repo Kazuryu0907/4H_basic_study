@@ -134,7 +134,7 @@ def expand2square(pil_img, background_color):
 #cap.set(cv2.CAP_PROP_FOURCC,cv2.VideoWriter_fourcc("H","2","6","4"))
 #cap.set(cv2.CAP_PROP_FRAME_WIDTH,1920)
 #cap.set(cv2.CAP_PROP_FRAME_HEIGHT,1080)
-while True:
+while 1:
     #_, img = cap.read()
 
 
