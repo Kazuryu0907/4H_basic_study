@@ -1,15 +1,19 @@
-from src import *
+from src import Marker,mask
 import cv2
 mk = Marker()
 tri = mk.getCorner(cv2.imread(r"C:\Users\kazum\Desktop\cutted\src\sample.jpg"),(800,1200),[0,1,2,3])
-
+cv2.imshow("A",cv2.imread(r"C:\Users\kazum\Desktop\cutted\src\sample.jpg"))
+cv2.imwrite("b.png",tri)
 import numpy as np
+
+hsv_min = np.array([0,0,200])
+hsv_max = np.array([180,45,255])
+mask(tri,hsv_min,hsv_max,thre=(0,150))
+"""
 #green
 hsv_min = np.array([30,64,0])
 hsv_max = np.array([90,255,255])
 """
-hsv_min = np.array([0,0,100])
-hsv_max = np.array([180,45,255])
 """
 mask = cv2.inRange(cv2.cvtColor(tri,cv2.COLOR_BGR2HSV),hsv_min,hsv_max)
 masked = cv2.bitwise_and(tri,tri,mask=mask)
@@ -27,3 +31,4 @@ cv2.drawContours(tri,[box],-1,(0,0,255),thickness=2)
 cv2.imshow("a",tri) 
 cv2.waitKey(0)
 cv2.destroyAllWindows()
+"""
