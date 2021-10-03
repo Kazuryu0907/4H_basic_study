@@ -1,8 +1,8 @@
 from src import Marker,mask
 import cv2
 mk = Marker()
-tri = mk.getCorner(cv2.imread(r"C:\Users\kazum\Desktop\cutted\src\sample.jpg"),(800,1200),[0,1,2,3])
-cv2.imshow("A",cv2.imread(r"C:\Users\kazum\Desktop\cutted\src\sample.jpg"))
+tri = mk.getCorner(cv2.imread(r"sample.jpg"),(800,1200),[0,1,2,3])
+cv2.imshow("A",cv2.imread(r"sample.jpg"))
 cv2.imwrite("b.png",tri)
 import numpy as np
 

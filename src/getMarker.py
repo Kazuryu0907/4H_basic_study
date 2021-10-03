@@ -99,3 +99,48 @@ class Marker:
                     self.input_ids[1] = id
                 else:
                     self.input_ids[2] = id
+
+if __name__ == "__main__":
+    mk = Marker()
+    mapSize = ((450-13)*1,(300-13)*1)
+    img = mk.getCorner(cv2.imread(f"../tt.jpg"),mapSize,input_ids=[2,3,1,0])
+    img_gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+    ret,img_binary = cv2.threshold(img_gray,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+    contours,hierarchy = cv2.findContours(img_binary,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+    cv2.drawContours(img,contours,-1,(0,0,255))
+    import math
+    import dobot
+
+    db = dobot.CommandSender("192.168.33.40",8893)
+    for cnt in contours:
+        if cv2.contourArea(cnt) > 100:
+            x,y,w,h = cv2.boundingRect(cnt)
+            rect = cv2.minAreaRect(cnt)
+            box = cv2.boxPoints(rect)
+            box = np.int0(box)
+            #print(box)
+            p1 = box[0]
+            p2 = box[1]
+            #print(math.sqrt((p1[0]-p2[0])**2+(p1[1]-p2[1])**2))
+            p1 = box[1]
+            p2 = box[2]
+            #print(math.sqrt((p1[0]-p2[0])**2+(p1[1]-p2[1])**2))
+            cv2.drawContours(img,[box],0,(0,0,255),2)
+            M = cv2.moments(cnt)
+            center = (int(M['m10']/M['m00']),int(M['m01']/M['m00']))
+            if rect[2] != 90.0:
+                cv2.drawMarker(img,center,(255,0,0))
+                t_x = center[0] - mapSize[1]//2
+                t_center = (t_x,center[1])
+                print(t_center)
+                if t_x > 0:
+                    #0:left
+                    db.arm_orientation(0)
+                else:
+                    db.arm_orientation(1)
+                db.jump_to(t_center[0],t_center[1],60,int(rect[2]))
+                #db.go_to(t_center[0],t_center[1],60,int(rect[2]))
+            #print(rect[2])
+            #cv2.rectangle(img,(x,y),(x+w,y+h),(0,255,0),1)
+    cv2.imshow("a",img)
+    cv2.waitKey(0)
