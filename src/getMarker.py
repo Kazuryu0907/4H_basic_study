@@ -120,9 +120,26 @@ def getRoll(box,angle):
     p2 = xmin
     print(p0,p1,p2)
     #平行の法
+    tan1 = math.atan2(p0[1]-p1[1],p0[0]-p1[0])
     l1 = (p0[0]-p1[0])**2 + (p0[1]-p1[1])**2
+    tan2 = math.atan2(p0[1]-p2[1],p0[0]-p2[0])
     l2 = (p0[0]-p2[0])**2 + (p0[1]-p2[1])**2
+    longtan = tan1 if l1 > l2 else tan2
+    atanangle = math.degrees(longtan)
+    print(f"longtan:{atanangle}")
     roll = 0
+    #-90 ~ 90
+    if atanangle < -90:
+        atanangle += 180
+    elif atanangle > 90:
+        atanangle -= 180
+    
+    if atanangle > 45 or atanangle < -45:
+        print("縦")
+    else:
+        print("横")
+    
+    """
     if l1 > l2:
         #横長
         print("横",angle)
@@ -134,7 +151,8 @@ def getRoll(box,angle):
             roll = 90-angle
         else:
             roll = angle
-    return roll
+    """
+    return atanangle
 
 def dobotSetup():
     db.set_cordinate_speed(velocity=60,jerk=6)
@@ -142,16 +160,18 @@ def dobotSetup():
     db.jump_joint_to(j1=0,j2=0,j3=60,j4=0)
 
 
-cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
+#cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
 if __name__ == "__main__":
     import dobot
-    db = dobot.CommandSender("192.168.33.40",8889)
-    dobotSetup()
+    #bd = dobot.CommandSender("192.168.33.40",8889)
+    #dobotSetup()
     import time
-    time.sleep(1)
+    import math
+    #time.sleep(1)
     mk = Marker()
     mapSize = ((400-13)*1,(465-13)*1)
-    _,cap_img = cap.read()
+    cap_img = cv2.imread("camera.jpg")
+    #_,cap_img = cap.read()
     img = mk.getCorner(cap_img,mapSize,input_ids=[0,1,2,3])
     #cv2.imwrite("camera.jpg",cap_img)
     mask = cv2.inRange(cv2.cvtColor(img,cv2.COLOR_BGR2HSV),np.array([20,100,80]),np.array([50,255,255]))
@@ -186,8 +206,9 @@ if __name__ == "__main__":
                 t_x = center[0] - mapSize[1]//2
                 t_center = (t_x,center[1])
                 print(t_center)
-                db.arm_orientation(1 if t_x > 0 else 0)
-                db.jump_to(x=t_center[1],y=t_center[0],z=100,r=getRoll(box,int(rect[2])))
+                getRoll(box,int(rect[2]))
+                #bd.arm_orientation(1 if t_x > 0 else 0)
+                #bd.jump_to(x=t_center[1],y=t_center[0],z=100,r=getRoll(box,int(rect[2])))
     cv2.imshow("a",img)
     cv2.waitKey(0)
 
