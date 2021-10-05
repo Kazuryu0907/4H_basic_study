@@ -1,3 +1,3 @@
 ### Todo
-- [ ] markerの精度確認
+- [ ] markerの精度確認 誤差数cm
 - [ ] 

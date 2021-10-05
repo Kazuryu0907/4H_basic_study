@@ -1,3 +1,4 @@
+from sys import dont_write_bytecode
 import cv2
 import numpy as np
 import itertools
@@ -100,18 +101,69 @@ class Marker:
                 else:
                     self.input_ids[2] = id
 
-if __name__ == "__main__":
-    mk = Marker()
-    mapSize = ((450-13)*1,(300-13)*1)
-    img = mk.getCorner(cv2.imread(f"../tt.jpg"),mapSize,input_ids=[2,3,1,0])
-    img_gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
-    ret,img_binary = cv2.threshold(img_gray,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-    contours,hierarchy = cv2.findContours(img_binary,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
-    cv2.drawContours(img,contours,-1,(0,0,255))
-    import math
-    import dobot
+def getRoll(box,angle):
+    ymin = [0,0]
+    xmax = [0,0]
+    xmin = [0,0]
+    for i in range(4):
+        if i != 0:
+            ymin = box[i] if box[i][1] < ymin[1] else ymin[:]
+            xmax = box[i] if box[i][0] > xmax[0] else xmax[:]
+            xmin = box[i] if box[i][0] < xmin[0] else xmin[:]
+        else:
+            ymin = box[i][:]
+            xmax = box[i][:]
+            xmin = box[i][:]
 
-    db = dobot.CommandSender("192.168.33.40",8893)
+    p0 = ymin
+    p1 = xmax
+    p2 = xmin
+    print(p0,p1,p2)
+    #平行の法
+    l1 = (p0[0]-p1[0])**2 + (p0[1]-p1[1])**2
+    l2 = (p0[0]-p2[0])**2 + (p0[1]-p2[1])**2
+    roll = 0
+    if l1 > l2:
+        #横長
+        print("横",angle)
+        roll = angle-90
+    else:
+        #縦長
+        print("縦",angle)
+        if angle < 45:
+            roll = 90-angle
+        else:
+            roll = angle
+    return roll
+
+def dobotSetup():
+    db.set_cordinate_speed(velocity=60,jerk=6)
+    db.set_jump_pram(height=60,zlimit=185)
+    db.jump_joint_to(j1=0,j2=0,j3=60,j4=0)
+
+
+cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
+if __name__ == "__main__":
+    import dobot
+    db = dobot.CommandSender("192.168.33.40",8889)
+    dobotSetup()
+    import time
+    time.sleep(1)
+    mk = Marker()
+    mapSize = ((400-13)*1,(465-13)*1)
+    _,cap_img = cap.read()
+    img = mk.getCorner(cap_img,mapSize,input_ids=[0,1,2,3])
+    #cv2.imwrite("camera.jpg",cap_img)
+    mask = cv2.inRange(cv2.cvtColor(img,cv2.COLOR_BGR2HSV),np.array([20,100,80]),np.array([50,255,255]))
+    masked = cv2.bitwise_and(img,img,mask=mask)
+    masked = cv2.cvtColor(masked,cv2.COLOR_HSV2BGR)
+    
+    img_gray = cv2.cvtColor(masked,cv2.COLOR_BGR2GRAY)
+    ret,img_binary = cv2.threshold(img_gray,30,200,cv2.THRESH_BINARY)
+    cv2.imshow("mask",img_binary)
+    contours,hierarchy = cv2.findContours(img_binary,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+    #cv2.drawContours(img,contours,-1,(0,0,255))
+    import math
     for cnt in contours:
         if cv2.contourArea(cnt) > 100:
             x,y,w,h = cv2.boundingRect(cnt)
@@ -119,12 +171,13 @@ if __name__ == "__main__":
             box = cv2.boxPoints(rect)
             box = np.int0(box)
             #print(box)
-            p1 = box[0]
-            p2 = box[1]
-            #print(math.sqrt((p1[0]-p2[0])**2+(p1[1]-p2[1])**2))
-            p1 = box[1]
-            p2 = box[2]
-            #print(math.sqrt((p1[0]-p2[0])**2+(p1[1]-p2[1])**2))
+            if cv2.contourArea(cnt) > 10000:
+                length = 0
+                for i in range(4):
+                    p1 = box[i]
+                    p2 = box[(i+1)%4]
+                    length = math.sqrt((p1[0]-p2[0])**2+(p1[1]-p2[1])**2)
+                cv2.putText(img,str(length),(p1[0]-30,p1[1]-30),fontFace=cv2.FONT_HERSHEY_PLAIN,fontScale=1.5,color=(255,255,255),thickness=1,lineType=cv2.LINE_4)
             cv2.drawContours(img,[box],0,(0,0,255),2)
             M = cv2.moments(cnt)
             center = (int(M['m10']/M['m00']),int(M['m01']/M['m00']))
@@ -133,14 +186,9 @@ if __name__ == "__main__":
                 t_x = center[0] - mapSize[1]//2
                 t_center = (t_x,center[1])
                 print(t_center)
-                if t_x > 0:
-                    #0:left
-                    db.arm_orientation(0)
-                else:
-                    db.arm_orientation(1)
-                db.jump_to(t_center[0],t_center[1],60,int(rect[2]))
-                #db.go_to(t_center[0],t_center[1],60,int(rect[2]))
-            #print(rect[2])
-            #cv2.rectangle(img,(x,y),(x+w,y+h),(0,255,0),1)
+                db.arm_orientation(1 if t_x > 0 else 0)
+                db.jump_to(x=t_center[1],y=t_center[0],z=100,r=getRoll(box,int(rect[2])))
     cv2.imshow("a",img)
     cv2.waitKey(0)
+
+
