@@ -207,7 +207,7 @@ if __name__ == "__main__":
                 t_center = (t_x,center[1])
                 print(t_center)
                 db.arm_orientation(1 if t_x > 0 else 0)
-                db.jump_to(x=t_center[1],y=t_center[0],z=100,r=int(getRoll(box)))
+                db.jump_to(x=t_center[1],y=t_center[0],z=100,r=-int(getRoll(box)))
     cv2.imshow("a",img)
     cv2.waitKey(0)
 
