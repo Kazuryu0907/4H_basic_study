@@ -101,7 +101,7 @@ class Marker:
                 else:
                     self.input_ids[2] = id
 
-def getRoll(box,angle):
+def getRoll(box):
     ymin = [0,0]
     xmax = [0,0]
     xmin = [0,0]
@@ -127,7 +127,6 @@ def getRoll(box,angle):
     longtan = tan1 if l1 > l2 else tan2
     atanangle = math.degrees(longtan)
     print(f"longtan:{atanangle}")
-    roll = 0
     #-90 ~ 90
     if atanangle < -90:
         atanangle += 180
@@ -160,21 +159,21 @@ def dobotSetup():
     db.jump_joint_to(j1=0,j2=0,j3=60,j4=0)
 
 
-#cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
+cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
 if __name__ == "__main__":
     import dobot
-    #bd = dobot.CommandSender("192.168.33.40",8889)
-    #dobotSetup()
+    db = dobot.CommandSender("192.168.33.40",8889)
+    dobotSetup()
     import time
     import math
-    #time.sleep(1)
+    time.sleep(1)
     mk = Marker()
     mapSize = ((400-13)*1,(465-13)*1)
-    cap_img = cv2.imread("camera.jpg")
-    #_,cap_img = cap.read()
+    #cap_img = cv2.imread("camera.jpg")
+    _,cap_img = cap.read()
     img = mk.getCorner(cap_img,mapSize,input_ids=[0,1,2,3])
     #cv2.imwrite("camera.jpg",cap_img)
-    mask = cv2.inRange(cv2.cvtColor(img,cv2.COLOR_BGR2HSV),np.array([20,100,80]),np.array([50,255,255]))
+    mask = cv2.inRange(cv2.cvtColor(img,cv2.COLOR_BGR2HSV),np.array([10,150,150]),np.array([50,255,255]))
     masked = cv2.bitwise_and(img,img,mask=mask)
     masked = cv2.cvtColor(masked,cv2.COLOR_HSV2BGR)
     
@@ -184,6 +183,7 @@ if __name__ == "__main__":
     contours,hierarchy = cv2.findContours(img_binary,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
     #cv2.drawContours(img,contours,-1,(0,0,255))
     import math
+    #cv2.imwrite("img.jpg",img)
     for cnt in contours:
         if cv2.contourArea(cnt) > 100:
             x,y,w,h = cv2.boundingRect(cnt)
@@ -201,14 +201,13 @@ if __name__ == "__main__":
             cv2.drawContours(img,[box],0,(0,0,255),2)
             M = cv2.moments(cnt)
             center = (int(M['m10']/M['m00']),int(M['m01']/M['m00']))
-            if rect[2] != 90.0:
+            if rect[2] != 810:
                 cv2.drawMarker(img,center,(255,0,0))
                 t_x = center[0] - mapSize[1]//2
                 t_center = (t_x,center[1])
                 print(t_center)
-                getRoll(box,int(rect[2]))
-                #bd.arm_orientation(1 if t_x > 0 else 0)
-                #bd.jump_to(x=t_center[1],y=t_center[0],z=100,r=getRoll(box,int(rect[2])))
+                db.arm_orientation(1 if t_x > 0 else 0)
+                db.jump_to(x=t_center[1],y=t_center[0],z=100,r=int(getRoll(box)))
     cv2.imshow("a",img)
     cv2.waitKey(0)
 
