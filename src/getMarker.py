@@ -102,24 +102,14 @@ class Marker:
                     self.input_ids[2] = id
 
 def getRoll(box):
-    ymin = [0,0]
-    xmax = [0,0]
-    xmin = [0,0]
-    for i in range(4):
-        if i != 0:
-            ymin = box[i] if box[i][1] < ymin[1] else ymin[:]
-            xmax = box[i] if box[i][0] > xmax[0] else xmax[:]
-            xmin = box[i] if box[i][0] < xmin[0] else xmin[:]
-        else:
-            ymin = box[i][:]
-            xmax = box[i][:]
-            xmin = box[i][:]
+    ymin = box[box[:,1].argmin()]
+    xmax = box[box[:,0].argmax()]
+    xmin = box[box[:,0].argmin()]
 
     p0 = ymin
     p1 = xmax
     p2 = xmin
-    print(p0,p1,p2)
-    #平行の法
+
     tan1 = math.atan2(p0[1]-p1[1],p0[0]-p1[0])
     l1 = (p0[0]-p1[0])**2 + (p0[1]-p1[1])**2
     tan2 = math.atan2(p0[1]-p2[1],p0[0]-p2[0])
@@ -132,31 +122,22 @@ def getRoll(box):
         atanangle += 180
     elif atanangle > 90:
         atanangle -= 180
-    
-    if atanangle > 45 or atanangle < -45:
-        print("縦")
-    else:
-        print("横")
-    
-    """
-    if l1 > l2:
-        #横長
-        print("横",angle)
-        roll = angle-90
-    else:
-        #縦長
-        print("縦",angle)
-        if angle < 45:
-            roll = 90-angle
-        else:
-            roll = angle
-    """
+
     return atanangle
 
 def dobotSetup():
     db.set_cordinate_speed(velocity=60,jerk=6)
     db.set_jump_pram(height=60,zlimit=185)
     db.jump_joint_to(j1=0,j2=0,j3=60,j4=0)
+
+converge_g = 1.0
+def converge(t,angle):
+    global converge_g
+    R = np.array([[math.cos(-angle),-math.sin(-angle)],[math.sin(-angle),math.cos(-angle)]])
+    t_n = np.array(t)
+    t_g = R*t_n
+    to_dobot = t_g*converge_g
+
 
 
 cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
@@ -201,13 +182,14 @@ if __name__ == "__main__":
             cv2.drawContours(img,[box],0,(0,0,255),2)
             M = cv2.moments(cnt)
             center = (int(M['m10']/M['m00']),int(M['m01']/M['m00']))
-            if rect[2] != 810:
-                cv2.drawMarker(img,center,(255,0,0))
-                t_x = center[0] - mapSize[1]//2
-                t_center = (t_x,center[1])
-                print(t_center)
-                db.arm_orientation(1 if t_x > 0 else 0)
-                db.jump_to(x=t_center[1],y=t_center[0],z=100,r=-int(getRoll(box)))
+
+            cv2.drawMarker(img,center,(255,0,0))
+            t_x = center[0] - mapSize[1]//2
+            t_center = (t_x,center[1])
+            print(t_center)
+            db.arm_orientation(1 if t_x > 0 else 0)
+            db.jump_to(x=t_center[1],y=t_center[0],z=100,r=-int(getRoll(box)))
+            print(t_center[1],t_center[0],100,-int(getRoll(box)))
     cv2.imshow("a",img)
     cv2.waitKey(0)
 

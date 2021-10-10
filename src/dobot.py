@@ -24,6 +24,7 @@ class CommandSender:
     self.port = port
     self.timeout = 8
     self.buffer_size = 1024
+    self.currentPosition = [0,0,0,0]
     self.log = logging.getLogger('DobotCommandSender')
 
     ret = self.ping()
