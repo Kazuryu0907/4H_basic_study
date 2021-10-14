@@ -5,7 +5,7 @@ if __name__ == '__main__':
 
   HOST = '192.168.33.40'
   #HOST = '127.0.0.1'
-  PORT=8893
+  PORT=8889
 
   logging.basicConfig(format='[%(levelname)s] %(asctime)s: %(message)s')
   logging.getLogger('DobotCommandSender').setLevel(logging.DEBUG)
@@ -17,7 +17,11 @@ if __name__ == '__main__':
     # 初期設定系
     cs.set_cordinate_speed(velocity=20,jerk=3)
     cs.set_jump_pram(height=60,zlimit=185)
-
+    cs.arm_orientation(mode=0) # 0=Left 1=Right 
+    #for i in range(100):
+    cs.jump_joint_to(j1=0,j2=0,j3=60,j4=0)
+    #cs.go_to(x=350,y=250,z=60)
+    """
     # 初期位置にセット
     cs.jump_joint_to(j1=0,j2=0,j3=60,j4=0)
     cs.wait(1000)
@@ -46,6 +50,6 @@ if __name__ == '__main__':
     # cs.set_output(pin=1,value=-1)
     # cs.get_input(pin=1)
     # cs.wait(2000)
-    
+    """
   except:
     print('例外発生を受けてプログラムを途中終了します。')  
