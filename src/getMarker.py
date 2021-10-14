@@ -130,13 +130,12 @@ def dobotSetup():
     db.set_jump_pram(height=60,zlimit=185)
     db.jump_joint_to(j1=0,j2=0,j3=60,j4=0)
 
-converge_g = 1.0
-def converge(t,angle):
-    global converge_g
-    R = np.array([[math.cos(-angle),-math.sin(-angle)],[math.sin(-angle),math.cos(-angle)]])
-    t_n = np.array(t)
-    t_g = R*t_n
-    to_dobot = t_g*converge_g
+
+def caluclateGlobal(converge,inv_A,h,angle):
+    R = np.array([[math.cos(-angle),-math.sin(-angle),0],[math.sin(-angle),math.cos(-angle),0],[0,0,1]])
+    X = h*R@inv_A@converge
+    return X
+
 
 
 

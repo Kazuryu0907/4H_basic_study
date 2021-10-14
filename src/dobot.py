@@ -24,7 +24,7 @@ class CommandSender:
     self.port = port
     self.timeout = 8
     self.buffer_size = 1024
-    self.currentPosition = [0,0,0,0]
+    self.__currentPosition = [0,0,0,0]
     self.log = logging.getLogger('DobotCommandSender')
 
     ret = self.ping()
@@ -40,6 +40,9 @@ class CommandSender:
   def Z_MIN_LIMIT(self):
     return self.__Z_MIN_LIMIT
 
+  @property
+  def currentPosition(self):
+    return self.__currentPosition
   def _send(self, cmd_dict):
 
     # 引数「cmd_dict」がdictオブジェクトであることを確認
@@ -195,6 +198,7 @@ class CommandSender:
     if not( self.Z_MIN_LIMIT <= z <= self.Z_MAX_LIMIT ):
       msg = f'CommandSender.jump_to(...) の 引数 z は {self.Z_MIN_LIMIT} 以上 {self.Z_MAX_LIMIT} 以下で与えてください。'
       raise ValueError(msg)
+    self.__currentPosition = [x,y,z,r]
     return self._send(dict(command='JumpTo',x=x,y=y,z=z,r=r))
 
   def jump_joint_to(self, j1:int, j2:int, j3:int, j4:int=0):
@@ -219,6 +223,7 @@ class CommandSender:
     if not( self.Z_MIN_LIMIT <= j3 <= self.Z_MAX_LIMIT ):
       msg = f'CommandSender.jump_joint_to(...) の 引数 z は {self.Z_MIN_LIMIT} 以上 {self.Z_MAX_LIMIT} 以下で与えてください。'
       raise ValueError(msg)
+    self.__currentPosition = [x,y,z,r]
     return self._send(dict(command='JumpJointTo',j1=j1,j2=j2,j3=j3,j4=j4))
 
   def go_to(self, x:int, y:int, z:int, r:int=0):
@@ -240,6 +245,7 @@ class CommandSender:
       msg = f'InvalidArgError : z={z} in go_to(...)'
       self.log.error(msg)
       return dict(is_sccess=False, msg=msg) 
+    self.__currentPosition = [x,y,z,r]
     return self._send(dict(command='GoTo',x=x,y=y,z=z,r=r))
 
   def quit(self):
