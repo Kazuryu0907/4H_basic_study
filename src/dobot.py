@@ -25,6 +25,12 @@ class CommandSender:
     self.timeout = 8
     self.buffer_size = 1024
     self.__currentPosition = [0,0,0,0]
+    self.JUMP_TO = 0
+    self.GO_TO = 1
+    self.JUMP_JOINT_TO = 2
+    self.ismoving = False
+    self.iswait = True
+    self.commands = []
     self.log = logging.getLogger('DobotCommandSender')
 
     ret = self.ping()
@@ -43,6 +49,7 @@ class CommandSender:
   @property
   def currentPosition(self):
     return self.__currentPosition
+  
   def _send(self, cmd_dict):
 
     # 引数「cmd_dict」がdictオブジェクトであることを確認
@@ -67,6 +74,10 @@ class CommandSender:
           raw = s.recv(self.buffer_size).decode('UTF-8')
           res = json.loads(raw)
           self.log.info(f' RES >> {res}')
+          print(cmd_dict)
+          if cmd_dict["command"] == "Wait" and res["is_sccess"] == True:
+            print("wait:is_success is True")
+            self.ismoving = False
         except json.JSONDecodeError as e:       
           self.log.error('Dobot側でエラーが発生した可能性があるため強制終了させます。')
           self.log.error('最後に送信したコマンドの1つ前に原因がある可能性が高いです。')
@@ -223,7 +234,7 @@ class CommandSender:
     if not( self.Z_MIN_LIMIT <= j3 <= self.Z_MAX_LIMIT ):
       msg = f'CommandSender.jump_joint_to(...) の 引数 z は {self.Z_MIN_LIMIT} 以上 {self.Z_MAX_LIMIT} 以下で与えてください。'
       raise ValueError(msg)
-    self.__currentPosition = [x,y,z,r]
+    self.__currentPosition = [j1,j2,j3,j4]
     return self._send(dict(command='JumpJointTo',j1=j1,j2=j2,j3=j3,j4=j4))
 
   def go_to(self, x:int, y:int, z:int, r:int=0):
@@ -248,6 +259,16 @@ class CommandSender:
     self.__currentPosition = [x,y,z,r]
     return self._send(dict(command='GoTo',x=x,y=y,z=z,r=r))
 
+  def move(self,type,converge):
+    self.ismoving = True
+    if type == self.JUMP_TO:
+      self.jump_to(x=converge[0],y=converge[1],z=converge[2],r=converge[3])
+    elif type == self.JUMP_JOINT_TO:
+      self.jump_joint_to(j1=converge[0],j2=converge[1],j3=converge[2],j4=converge[3])
+    elif type == self.GO_TO:
+      self.go_to(x=converge[0],y=converge[1],z=converge[2],r=converge[3])
+    self.wait(1)
+    
   def quit(self):
     return self._send(dict(command='Quit'))
   
@@ -256,3 +277,8 @@ class CommandSender:
 
   def __repr__(self):
     return f'DobotCommandSender_{self.host}:{self.port}'
+
+if __name__ == "__main__":
+  db = CommandSender("192.168.33.40",8889)
+  print(db.ismoving)
+  db.move(db.JUMP_TO,[350,0,60,0])

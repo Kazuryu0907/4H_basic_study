@@ -2,6 +2,7 @@ from sys import dont_write_bytecode
 import cv2
 import numpy as np
 import itertools
+import math
 
 class Marker:
     """
@@ -16,7 +17,7 @@ class Marker:
         self.aruco = cv2.aruco
         self.dictionary = self.aruco.getPredefinedDictionary(self.aruco.DICT_4X4_50)
     
-    def getCorner(self,img:np.ndarray,size:tuple,input_ids=None,tri=False) -> np.ndarray:
+    def getCorner(self,img:np.ndarray,size:tuple,input_ids=None,tri=False,middle=None) -> np.ndarray:
         """
         マーカーからトリミングする
 
@@ -34,6 +35,10 @@ class Marker:
             例 [0,1,2,3]
         tri : bool
             tri=Trueの時マーカーの内側をトリミングする
+
+        middle : list
+            中心測定用のマーカーid
+            2個を想定
         
         Returns
         -------
@@ -51,11 +56,27 @@ class Marker:
                 return None
         else:
             self.input_ids = input_ids
+
+                
+
+
         self.getInputcorners(tri)
         self.H,self.W = size
         self.output_corner = np.array([[0,0],[self.W,0],[self.W,self.H],[0,self.H]],dtype=np.float32)
         self.M = cv2.getPerspectiveTransform(self.input_corner,self.output_corner)
         self.rst = cv2.warpPerspective(self.img,self.M,(self.W,self.H))
+
+        if middle is not None:
+            try:
+                middle_coors = [self.corners[self.ids.index(i)] for i in middle]
+                cvt_middle_coors = [self.M@i for i in middle_coors]
+                centerX = 0
+                for coor in cvt_middle_coors:
+                    centerX += coor[0]
+                centerX = centerX // 2
+                print(centerX)
+            except:
+                pass
         return self.rst
     
     #0-------1
@@ -109,15 +130,17 @@ def getRoll(box):
     p0 = ymin
     p1 = xmax
     p2 = xmin
-
+    #辺の長さ取得
     tan1 = math.atan2(p0[1]-p1[1],p0[0]-p1[0])
     l1 = (p0[0]-p1[0])**2 + (p0[1]-p1[1])**2
     tan2 = math.atan2(p0[1]-p2[1],p0[0]-p2[0])
     l2 = (p0[0]-p2[0])**2 + (p0[1]-p2[1])**2
+    #長辺の角度を代入
     longtan = tan1 if l1 > l2 else tan2
+    #rad to degree
     atanangle = math.degrees(longtan)
     print(f"longtan:{atanangle}")
-    #-90 ~ 90
+    #角度調整-90 ~ 90
     if atanangle < -90:
         atanangle += 180
     elif atanangle > 90:
@@ -131,9 +154,9 @@ def dobotSetup():
     db.jump_joint_to(j1=0,j2=0,j3=60,j4=0)
 
 
-def caluclateGlobal(converge,inv_A,h,angle):
+def caluclateGlobal(coordinate,inv_A,h,angle):
     R = np.array([[math.cos(-angle),-math.sin(-angle),0],[math.sin(-angle),math.cos(-angle),0],[0,0,1]])
-    X = h*R@inv_A@converge
+    X = h*R@inv_A@coordinate
     return X
 
 
@@ -142,36 +165,47 @@ def caluclateGlobal(converge,inv_A,h,angle):
 cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
 if __name__ == "__main__":
     import dobot
-    db = dobot.CommandSender("192.168.33.40",8889)
-    dobotSetup()
     import time
     import math
+
+    #dobotのインスタンス作成
+    db = dobot.CommandSender("192.168.33.40",8889)
+    #dobotの初期設定
+    dobotSetup()
+
     time.sleep(1)
+    #マーカーのインスタンス作成
     mk = Marker()
+    #マーカー間のサイズ定義
     mapSize = ((400-13)*1,(465-13)*1)
     #cap_img = cv2.imread("camera.jpg")
     _,cap_img = cap.read()
+    #マーカー読み取り及び射影変換
     img = mk.getCorner(cap_img,mapSize,input_ids=[0,1,2,3])
-    #cv2.imwrite("camera.jpg",cap_img)
+
+    #恥物の色のマスク
     mask = cv2.inRange(cv2.cvtColor(img,cv2.COLOR_BGR2HSV),np.array([10,150,150]),np.array([50,255,255]))
     masked = cv2.bitwise_and(img,img,mask=mask)
     masked = cv2.cvtColor(masked,cv2.COLOR_HSV2BGR)
-    
+
+    #輪郭取得
     img_gray = cv2.cvtColor(masked,cv2.COLOR_BGR2GRAY)
     ret,img_binary = cv2.threshold(img_gray,30,200,cv2.THRESH_BINARY)
     cv2.imshow("mask",img_binary)
     contours,hierarchy = cv2.findContours(img_binary,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
-    #cv2.drawContours(img,contours,-1,(0,0,255))
-    import math
-    #cv2.imwrite("img.jpg",img)
+
+
     for cnt in contours:
+        #小さいのは除外
         if cv2.contourArea(cnt) > 100:
+            #回転あり最小矩形
             x,y,w,h = cv2.boundingRect(cnt)
             rect = cv2.minAreaRect(cnt)
             box = cv2.boxPoints(rect)
             box = np.int0(box)
             #print(box)
             if cv2.contourArea(cnt) > 10000:
+                #辺の長さ出してるだけ
                 length = 0
                 for i in range(4):
                     p1 = box[i]
@@ -180,15 +214,20 @@ if __name__ == "__main__":
                 cv2.putText(img,str(length),(p1[0]-30,p1[1]-30),fontFace=cv2.FONT_HERSHEY_PLAIN,fontScale=1.5,color=(255,255,255),thickness=1,lineType=cv2.LINE_4)
             cv2.drawContours(img,[box],0,(0,0,255),2)
             M = cv2.moments(cnt)
+            #重心計算
             center = (int(M['m10']/M['m00']),int(M['m01']/M['m00']))
 
             cv2.drawMarker(img,center,(255,0,0))
+            #cv2座標からdobot座標系への変換
             t_x = center[0] - mapSize[1]//2
             t_center = (t_x,center[1])
             print(t_center)
+            #右手系・左手系設定
             db.arm_orientation(1 if t_x > 0 else 0)
-            db.jump_to(x=t_center[1],y=t_center[0],z=100,r=-int(getRoll(box)))
+            #動かす(自作関数(rで角度取得))
+            db.move(db.JUMP_TO,[t_center[1],t_center[0],100,-int(getRoll(box))])
             print(t_center[1],t_center[0],100,-int(getRoll(box)))
+            print(f"is moving:{db.ismoving}")
     cv2.imshow("a",img)
     cv2.waitKey(0)
 
