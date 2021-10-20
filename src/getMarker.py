@@ -47,7 +47,7 @@ class Marker:
         """
         
         self.img = img
-        self.img = cv2.resize(self.img,(self.img.shape[1]//1,self.img.shape[0]//1))
+        self.img = cv2.resize(self.img,(self.img.shape[1]//5,self.img.shape[0]//5))
         #マーカー読み取り
         self.corners,self.ids,self.rejectedImgPoints = self.aruco.detectMarkers(self.img,self.dictionary)
         #一次元にしてる
@@ -65,6 +65,7 @@ class Marker:
         self.getInputcorners(tri)
         self.H,self.W = size
         self.output_corner = np.array([[0,0],[self.W,0],[self.W,self.H],[0,self.H]],dtype=np.float32)
+        
         #射影変換
         self.M = cv2.getPerspectiveTransform(self.input_corner,self.output_corner)
         self.rst = cv2.warpPerspective(self.img,self.M,(self.W,self.H))
@@ -74,10 +75,14 @@ class Marker:
                 middle_coors_points = [coo[0][i] for i,coo in enumerate(middle_coors)]
                 #マーカーのindexの0と1を取得
                 to_cvt = np.zeros((len(middle_coors_points),3),dtype=np.float32)
-
+                #C = 0
                 for i,coo in enumerate(middle_coors_points):
+                    #C += coo[0]
                     to_cvt[i,:2] = coo[:]
                     to_cvt[i,2] = 1
+                #C = int(C//2)
+                #cv2.line(self.img,(C,0),(C,self.H),(0,0,255))
+                #cv2.imwrite("CENTER.jpg",self.img)
                 #射影変換
                 cvt_middle_coors = [self.M@coo.T for coo in to_cvt]
                 centerX = 0
@@ -85,13 +90,15 @@ class Marker:
                     centerX += coor[0]
                 #射影変換後の中心座標計算
                 centerX = centerX / 2.
-                #print(f"centerX:{centerX},middle:{self.W/2}")
+                print(f"centerX:{centerX},middle:{self.W/2}")
                 offset = int(centerX - self.W/2.)
                 #画像サイズ拡張＆平行移動
-                M = np.array([[1,0,0 if offset > 0 else -offset],[0,1,0]],dtype=np.float32)
+                tx = offset if offset > 0 else 0
+                M = np.array([[1,0,tx],[0,1,0]],dtype=np.float32)
                 dst = cv2.warpAffine(self.rst,M,(self.W+int(abs(offset)),self.H))
-                #cv2.line(dst,(self.W//2,0),(self.W//2,self.H),(0,0,255))
+                cv2.line(dst,(dst.shape[1]//2,0),(dst.shape[1]//2,self.H),(0,0,255))
                 return dst
+        cv2.line(self.rst,(self.rst.shape[1]//2,0),(self.rst.shape[1]//2,self.H),(0,0,255))
         return self.rst
     
     #0-------1
@@ -199,19 +206,20 @@ if __name__ == "__main__":
     import math
 
     #dobotのインスタンス作成
-    db = dobot.CommandSender("192.168.33.40",8889)
+    #db = dobot.CommandSender("192.168.33.40",8889)
     #dobotの初期設定
-    dobotSetup()
+    #dobotSetup()
 
     #time.sleep(1)
     #マーカーのインスタンス作成
     mk = Marker()
     #マーカー間のサイズ定義
-    mapSize = ((400-13)*1,(465-13)*1)
+    #mapSize = ((400-13)*1,(465-13)*1)
+    mapSize = (500,800)
     cap_img = cv2.imread("../sample.jpg")
     #_,cap_img = cap.read()
     #マーカー読み取り及び射影変換
-    img = mk.getCorner(cap_img,mapSize,input_ids=[0,1,2,3],middle=[4,5])
+    img = mk.getCorner(cap_img,mapSize,input_ids=[0,1,2,3])
 
     #恥物の色のマスク
     mask = cv2.inRange(cv2.cvtColor(img,cv2.COLOR_BGR2HSV),np.array([10,150,150]),np.array([50,255,255]))
@@ -253,10 +261,10 @@ if __name__ == "__main__":
             t_center = (t_x,center[1])
             print(t_center)
             #動かす(自作関数(rで角度取得))
-            db.move(db.JUMP_TO,[t_center[1],t_center[0],100,-int(getRoll(box))])
+            #db.move(db.JUMP_TO,[t_center[1],t_center[0],100,-int(getRoll(box))])
             print(t_center[1],t_center[0],100,-int(getRoll(box)))            
-
     cv2.imshow("a",img)
+    cv2.imwrite("before.jpg",img)
     cv2.waitKey(0)
 
 
