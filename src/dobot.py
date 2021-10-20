@@ -259,14 +259,15 @@ class CommandSender:
     self.__currentPosition = [x,y,z,r]
     return self._send(dict(command='GoTo',x=x,y=y,z=z,r=r))
 
-  def move(self,type,converge):
+  def move(self,type,coor):
     self.ismoving = True
+    self.arm_orientation(1 if coor[1] > 0 else 0)
     if type == self.JUMP_TO:
-      self.jump_to(x=converge[0],y=converge[1],z=converge[2],r=converge[3])
+      self.jump_to(x=coor[0],y=coor[1],z=coor[2],r=coor[3])
     elif type == self.JUMP_JOINT_TO:
-      self.jump_joint_to(j1=converge[0],j2=converge[1],j3=converge[2],j4=converge[3])
+      self.jump_joint_to(j1=coor[0],j2=coor[1],j3=coor[2],j4=coor[3])
     elif type == self.GO_TO:
-      self.go_to(x=converge[0],y=converge[1],z=converge[2],r=converge[3])
+      self.go_to(x=coor[0],y=coor[1],z=coor[2],r=coor[3])
     self.wait(1)
     
   def quit(self):
