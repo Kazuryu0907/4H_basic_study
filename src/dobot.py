@@ -76,7 +76,7 @@ class CommandSender:
           self.log.info(f' RES >> {res}')
           print(cmd_dict)
           if cmd_dict["command"] == "Wait" and res["is_sccess"] == True:
-            print("wait:is_success is True")
+            print("ismoving == False")
             self.ismoving = False
         except json.JSONDecodeError as e:       
           self.log.error('Dobot側でエラーが発生した可能性があるため強制終了させます。')
@@ -261,6 +261,7 @@ class CommandSender:
 
   def move(self,type,coor):
     self.ismoving = True
+    print("ismoving == True")
     self.arm_orientation(1 if coor[1] > 0 else 0)
     if type == self.JUMP_TO:
       self.jump_to(x=coor[0],y=coor[1],z=coor[2],r=coor[3])
@@ -269,6 +270,11 @@ class CommandSender:
     elif type == self.GO_TO:
       self.go_to(x=coor[0],y=coor[1],z=coor[2],r=coor[3])
     self.wait(1)
+
+  def dobotSetup(self) -> None:
+      self.set_cordinate_speed(velocity=60,jerk=6)
+      self.set_jump_pram(height=60,zlimit=185)
+      self.jump_joint_to(j1=0,j2=0,j3=100,j4=0)
     
   def quit(self):
     return self._send(dict(command='Quit'))

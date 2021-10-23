@@ -1,4 +1,3 @@
-from PIL.Image import TRANSPOSE
 import cv2
 import numpy as np
 

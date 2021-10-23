@@ -34,14 +34,11 @@ if __name__ == "__main__":
     caped_img = np.empty((HEIGHT,WIDTH,3),dtype=np.uint8)
     while True:
         try:
-            dis_stime = time.time()
             buf1_rdy.wait()
             caped_img[:,:,:] = np.reshape(buf1,(HEIGHT,WIDTH,3))
             buf1_rdy.clear()
+            
             cv2.imshow("f",caped_img)
-            key = cv2.waitKey(1)
-            print(key)
-            #print("Display FPS = ", 1.0 / (time.time() - dis_stime))
         except KeyboardInterrupt:
             print("Waiting camera reader to finish.")
             p1.join(10)
