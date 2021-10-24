@@ -1,13 +1,7 @@
-#
-
 import numpy as np
 import cv2
-from time import sleep
-
 
 def objectIsCatched(filename):
-
-    filename = 'LaserWithYObject.jpg'
 
     imgOriginal = cv2.imread(filename)
     imgBlur = cv2.GaussianBlur(imgOriginal, (3, 3), 0)
@@ -15,11 +9,11 @@ def objectIsCatched(filename):
     hsvLower = np.array([5/2, 30*2.55, 30*2.55])  # 抽出色の下限
     hsvUpper = np.array([50/2, 100*2.55, 100*2.55])  # 抽出色の上限
     targetResult = hsvExtraction(imgBlur, hsvLower, hsvUpper)  # 出力画像
-
+    cv2.imshow("A",targetResult)
     hsvLower = np.array([330/2, 30*2.55, 30*2.55])  # 抽出色の下限
     hsvUpper = np.array([360/2, 100*2.55, 100*2.55])  # 抽出色の上限
     raserResult = hsvExtraction(imgOriginal, hsvLower, hsvUpper)
-
+    cv2.imshow("B",raserResult)
     raserGry = cv2.cvtColor(raserResult, cv2.COLOR_BGR2GRAY)
     ret, raserBin = cv2.threshold(raserGry, 20, 255, cv2.THRESH_BINARY)
 
@@ -70,3 +64,5 @@ def hsvExtraction(image, hsvLower, hsvUpper):
     result = cv2.bitwise_and(image, image, mask=hsv_mask)  # 元画像とマスクを合成
     return result
 
+print(objectIsCatched(f"C:/Users/kazum/Desktop/p/LaserWithYObject.jpg"))
+cv2.waitKey(0)

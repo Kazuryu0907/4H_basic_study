@@ -11,6 +11,21 @@ def calculateGlobal(coordinate:np.ndarray,h:float,angle:float) -> np.ndarray:
     X:np.ndarray = h*R@inv_A@coo.T
     return X
 
+#17*theta
+#112
+#m = 1.5
+#端数24
+#18mm/rad
+#40 72
+def calculateGrip(l:float) -> float:
+    maxlong = 112.
+    calcul = maxlong - l
+    rad = calcul/18.
+    deg = math.degrees(rad)/2.
+    return deg
+
+print(calculateGrip(80))
+"""
 img:np.ndarray = cv2.imread(f"C:/Users/kazum/Desktop/p/1633703232.8421962.jpg")
 # mask = cv2.inRange(cv2.cvtColor(img,cv2.COLOR_BGR2HSV),np.array([10,150,150]),np.array([50,255,255]))
 # masked = cv2.bitwise_and(img,img,mask=mask)
@@ -36,8 +51,9 @@ for cnt in contours:
             img_center = (img.shape[0]//2,img.shape[1]//2)
             diff = np.array(list(center)) - np.array(list((img_center[1],img_center[0])))
             print(np.append(diff,0))
-            vec = calculateGlobal(diff,-10,0)
+            vec = calculateGlobal(diff,-60,0)
             #vec = np.append(vec,1)
             print(vec)
 cv2.imshow("a",img)
 cv2.waitKey(0)
+"""

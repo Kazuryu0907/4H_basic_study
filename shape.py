@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 from numpy.core import einsumfunc
 from PIL import Image
-import predict
+#import predict
 import math
 
 def getrotationMatrix(th):
@@ -138,7 +138,7 @@ while 1:
     #_, img = cap.read()
 
 
-    img = cv2.imread(r"C:\Users\kazum\Desktop\Camera\IMG_20210421_145906.jpg",1)
+    img = cv2.imread(r"C:\Users\kazum\Documents\GitHub\cutted\tri\IMG_20210719_170809.jpg",1)
     #ret,img = cap.read()
     img = cv2.resize(img,(int(img.shape[1]/5),int(img.shape[0]/5)))
     img_original = img.copy()
@@ -167,9 +167,11 @@ while 1:
 
         cv2.drawContours(img,[box],0,(0,0,255),2)
         cv2.rectangle(img,(x,y),(x+w,y+h),(0,255,0),1)
+        cv2.imshow("AA",img)
+        cv2.waitKey(0)
         center = getleftestcoor(box)
         
-
+        print(center)
         RM2d = cv2.getRotationMatrix2D(tuple(center),rect[2],1)
         img_rot = cv2.warpAffine(img,RM2d,((int(img.shape[1]),int(img.shape[0]))))
 
