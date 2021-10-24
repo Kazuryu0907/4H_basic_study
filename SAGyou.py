@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import math
+import src.dobot
 
 def calculateGlobal(coordinate:np.ndarray,h:float,angle:float) -> np.ndarray:
     coo:np.ndarray = np.append(coordinate,0)
@@ -24,9 +25,10 @@ def calculateGrip(l:float) -> float:
     deg = math.degrees(rad)/2.
     return deg
 
-print(calculateGrip(80))
-"""
-img:np.ndarray = cv2.imread(f"C:/Users/kazum/Desktop/p/1633703232.8421962.jpg")
+
+cap = cv2.VideoCapture(1,cv2.CAP_DSHOW)
+_,img = cap.read()
+#img:np.ndarray = cv2.imread(f"C:/Users/kazum/Desktop/p/1633703253.5631435.jpg")
 # mask = cv2.inRange(cv2.cvtColor(img,cv2.COLOR_BGR2HSV),np.array([10,150,150]),np.array([50,255,255]))
 # masked = cv2.bitwise_and(img,img,mask=mask)
 # masked = cv2.cvtColor(masked,cv2.COLOR_HSV2BGR)
@@ -48,12 +50,14 @@ for cnt in contours:
             cv2.drawMarker(img,center,(255,0,0))
             cv2.line(img,(img.shape[1]//2,0),(img.shape[1]//2,img.shape[0]),(0,0,255))
             cv2.line(img,(0,img.shape[0]//2),(img.shape[1],img.shape[0]//2),(0,0,255))
+            cv2.imshow("before",img)
             img_center = (img.shape[0]//2,img.shape[1]//2)
             diff = np.array(list(center)) - np.array(list((img_center[1],img_center[0])))
-            print(np.append(diff,0))
-            vec = calculateGlobal(diff,-60,0)
+            vec = calculateGlobal(diff,-115,0)
             #vec = np.append(vec,1)
             print(vec)
-cv2.imshow("a",img)
+            # _,img = cap.read()
+
+
+# cv2.imshow("a",img)
 cv2.waitKey(0)
-"""

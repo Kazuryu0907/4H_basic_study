@@ -1,8 +1,6 @@
 import cv2
 import numpy as np
 import itertools
-from communication import I2c,Serial_local
-from functions import *
 
 class Marker:
     """

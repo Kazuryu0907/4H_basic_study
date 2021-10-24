@@ -259,7 +259,7 @@ class CommandSender:
     self.__currentPosition = [x,y,z,r]
     return self._send(dict(command='GoTo',x=x,y=y,z=z,r=r))
 
-  def move(self,type,coor):
+  def move(self,type:int,coor:list):
     self.ismoving = True
     print("ismoving == True")
     self.arm_orientation(1 if coor[1] > 0 else 0)

@@ -7,3 +7,6 @@
 - [o] calculateGripの再計算 -> 変更なし
 - [o] 型たくさんつける
 - [o] calculateGlobalの整合性 ->　多分ok
+- [ ] 4debugのテスト
+- [ ] SAGyouのテスト
+- [ ] ミキシマックスする
