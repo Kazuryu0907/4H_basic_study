@@ -73,7 +73,7 @@ class getGoal:
 
 if __name__ == "__main__":
     gg = getGoal()
-    img = cv2.imread("before.jpg",cv2.IMREAD_COLOR)
+    img = cv2.imread("after.jpg",cv2.IMREAD_COLOR)
     mask = cv2.imread("mask.png",cv2.IMREAD_GRAYSCALE)
     img[mask==0] = [0,0,0]
     goal = gg.getGoal(img,"white",2,[30,200])
@@ -87,6 +87,6 @@ if __name__ == "__main__":
         # 元の輪郭及び近似した輪郭の点の数を表示する。
         print(f"contour {i}: before: {len(cnt)}, after: {len(approx_cnt)}")
     cv2.drawContours(img,approx_contours,-1,(0,0,255),3)
-    cv2.imshow("a",img)
-    cv2.waitKey(0)
+    cv2.imwrite("getGoal.jpg",img)
+    #cv2.waitKey(0)
     
