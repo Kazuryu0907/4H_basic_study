@@ -1,22 +1,33 @@
 import serial
-import pigpio
+import smbus
 
 class I2c:
     def __init__(self,ADDR:bytes):
         self._addr = ADDR
-        self._pi = pigpio.pi()
-        self._id = self._pi.i2c_open(1,ADDR)
+        self._bus = smbus.SMBus(1)
+        self.data = [0,0,0,0]
+        # self._id = self._pi.i2c_open(1,ADDR)
     def send(self,datas:list) -> None:
-        self._pi.i2c_write_i2c_block_data(self._id,0,datas)
+        # self._pi.i2c_write_i2c_block_data(self._id,0,datas)
+        self._bus.write_block_data(self._addr,0,datas)
     def request(self) -> bytes:
         #http://abyz.me.uk/rpi/pigpio/python.html#i2c_read_device
-        return self._pi.i2c_read_byte_data(self._id,self._addr)
+        # return self._pi.i2c_read_byte_data(self._id,self._addr)
+        return self._bus.read_byte(self._addr)
     def wait4Servo(self,index:int) -> None:
-        flag:bytes = 0 | 1 << index
+        flag = 1 << index
+        fir = True
+        predata = None
         while 1:
             data = self.request()
-            if flag == data:
+            if predata != None and data != predata:
+                fir = False
+            if not fir and (flag & data) >> index:
                 break
+            predata = data
+    def upload(self,index,data):
+        self.data[index] = data
+        self.send(self.data)
 
 class Serial_local:
     def __init__(self,port:str,rate:int) -> None:
@@ -30,9 +41,14 @@ class Serial_local:
     def getdata(self) -> bytes:
         return self._data
     def wait4Servo(self,index:int):
-        flag:bytes = 0 | 1 << index
+        flag:bytes = 1 << index
+        fir = True
+        predata = None
         while 1:
             self.update()
             data = self.getdata()
-            if data == flag:
+            if predata != None and data != predata:
+                fir = False
+            if not fir and (flag & data) >> index:
                 break
+            predata = data

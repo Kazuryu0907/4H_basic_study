@@ -1,27 +1,10 @@
-from communication import Serial_local,I2c
-from enum import IntEnum
-
-class CommIndex(IntEnum):
-  TIP = 0
-  HAND = 1
-  GRID = 2
-  LINE = 3
-
-comm = Serial_local("COM4",9600)
-
-data = f"{int(CommIndex.TIP)},90"
-comm.send(data)
-while 1:
-  comm.update()
-  comm.wait4Servo(int(CommIndex.TIP))
-  print("ServoEND")
-  break
-"""
-comm = I2c(0x1E)
-data = [0,90,0,0]
-comm.send(data)
-while 1:
-  comm.wait4Servo(1)
-  print("ServoEND")
-  break
-"""
+import cv2
+from functions import getContours,getRolledRect
+import numpy as np
+img = cv2.imread("tweak.png")
+contours = getContours(img,np.array([0,100,100]),np.array([10,255,255]))
+for cnt in contours:
+    box = getRolledRect(cnt)
+    cv2.drawContours(img,[box],-1,(0,0,255))
+cv2.imshow("a",img)
+cv2.waitKey(0)

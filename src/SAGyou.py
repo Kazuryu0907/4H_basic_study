@@ -1,10 +1,8 @@
-import cv2
 import numpy as np
-from numpy.core import einsumfunc
-from PIL import Image
-import predict
 import math
-
+import cv2
+from functions import getContours,getRolledRect
+from PIL import Image
 def getrotationMatrix(th):
     rad = np.deg2rad(th)
     M = np.array([[math.cos(rad),-math.sin(rad)],
@@ -129,89 +127,21 @@ def expand2square(pil_img, background_color):
         result.paste(pil_img, ((height - width) // 2, 0))
         return result
 
-#cap = cv2.VideoCapture(0)
-#cap.set(cv2.CAP_PROP_AUTOFOCUS, 1)
-#cap.set(cv2.CAP_PROP_FOURCC,cv2.VideoWriter_fourcc("H","2","6","4"))
-#cap.set(cv2.CAP_PROP_FRAME_WIDTH,1920)
-#cap.set(cv2.CAP_PROP_FRAME_HEIGHT,1080)
-while 1:
-    #_, img = cap.read()
+img = cv2.imread("C:\\Users\\kazum\\Desktop\\63.jpg")
+contours = getContours(img,np.array([10,100,100]),np.array([50,255,255]))
+maxcnt = max(contours,key=lambda cnt:cv2.contourArea(cnt))
+x,y,w,h = cv2.boundingRect(maxcnt)
+rect = cv2.minAreaRect(maxcnt)
+box = cv2.boxPoints(rect)
+box = np.int0(box)
+# center = getleftestcoor(box)
+M = cv2.moments(box)
+center = (int(M['m10']/M['m00']),int(M['m01']/M['m00']))
+RM2d = cv2.getRotationMatrix2D((int(center[0]),int(center[1])),rect[2],1)
+img_rot = cv2.warpAffine(img,RM2d,((int(img.shape[1]),int(img.shape[0]))))
+mask = cv2.inRange(cv2.cvtColor(img_rot,cv2.COLOR_BGR2HSV),np.array([10,100,100]),np.array([50,255,255]))
+masked = cv2.bitwise_and(img_rot,img_rot,mask=mask)
+#masked = cv2.cvtColor(masked,cv2.COLOR_HSV2BGR)
 
-
-    img = cv2.imread("C:\\Users\\kazum\\Desktop\\63.jpg",1)
-    #ret,img = cap.read()
-    img = cv2.resize(img,(int(img.shape[1]/1),int(img.shape[0]/1)))
-    img_original = img.copy()
-    from src.functions import getContours
-    contours = getContours(img,np.array([10,50,150]),np.array([50,255,255]))
-    """
-    img_gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
-    ret,img_binary = cv2.threshold(img_gray,127,255,cv2.THRESH_BINARY)
-    cv2.imshow("A",img_binary)
-    contours,hierarchy = cv2.findContours(img_binary,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
-    """
-    #laplacian = cv2.Laplacian(img_gray,cv2.CV_64F)
-    #print("var:{}".format(laplacian.var()))
-    
-
-    color = (255,255,0)
-    imgs = []
-
-    categorious = ["^","L"]
-
-    for i,contour in enumerate(contours):
-        if cv2.contourArea(contour) < 100:
-            continue
-
-        x,y,w,h = cv2.boundingRect(contour)
-        rect = cv2.minAreaRect(contour)
-
-        box = cv2.boxPoints(rect)
-        box = np.int0(box)
-
-        cv2.drawContours(img,[box],0,(0,0,255),2)
-        cv2.rectangle(img,(x,y),(x+w,y+h),(0,255,0),1)
-        cv2.imshow("AA",img)
-        cv2.waitKey(0)
-        center = getleftestcoor(box)
-        
-        print(tuple(center))
-        RM2d = cv2.getRotationMatrix2D((int(center[0]),int(center[1])),rect[2],1)
-        img_rot = cv2.warpAffine(img,RM2d,((int(img.shape[1]),int(img.shape[0]))))
-
-        l = getlong(box)
-        arr = np.array([y,y+h,x,x+w])
-        im = img_original[arr[0]:arr[1],arr[2]:arr[3]]
-        cv2_im = cv22square2pill(im)
-        cv2.imshow("B",cv2_im)
-        data = np.asarray(cv2_im)
-        data = data.astype("float32") / 255
-        pre = predict.predict_pic(data)
-        if 1 == 1:
-            #print(l)
-            
-            trim = img_rot[center[1]:center[1]+l[0],center[0]:center[0]+l[1]]
-            trim_gray = cv2.cvtColor(trim,cv2.COLOR_BGR2GRAY)
-            #extendimg(np.array(trim_gray))
-            trim_n = p_tile_threshold(trim_gray,0.8)
-            #cv2.imshow(str(i),trim_n)
-            trim_n = np.array(trim_n)
-            way = ["up","down","left","right"]
-            coor = getrotatecoor(trim_n,rect[2])
-            globalcoor = coor+center
-            cv2.circle(img,tuple(globalcoor),5,(255,0,0))
-        else:
-            M = cv2.moments(contour)
-            cx = int(M["m10"]/M["m00"])
-            cy = int(M["m01"]/M["m00"])
-            cv2.circle(img,(cx,cy),5,(255,0,0))
-
-
-        cv2.putText(img,categorious[pre],(arr[2],arr[0]),cv2.FONT_HERSHEY_PLAIN,2,(255,255,255),3,cv2.LINE_AA)
-        
-    cv2.imshow("C",img)
-        #cv2.imwrite("rect.jpg",img)
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-#cap.release()
-cv2.destroyAllWindows()
+cv2.imshow("a",masked)
+cv2.waitKey(0)

@@ -24,7 +24,7 @@ class CommandSender:
     self.port = port
     self.timeout = 8
     self.buffer_size = 1024
-    self.__currentPosition = [0,0,0,0]
+    self.__currentPosition = [400,0,100,0]
     self.JUMP_TO = 0
     self.GO_TO = 1
     self.JUMP_JOINT_TO = 2
@@ -234,7 +234,7 @@ class CommandSender:
     if not( self.Z_MIN_LIMIT <= j3 <= self.Z_MAX_LIMIT ):
       msg = f'CommandSender.jump_joint_to(...) の 引数 z は {self.Z_MIN_LIMIT} 以上 {self.Z_MAX_LIMIT} 以下で与えてください。'
       raise ValueError(msg)
-    self.__currentPosition = [j1,j2,j3,j4]
+    #self.__currentPosition = [j1,j2,j3,j4]
     return self._send(dict(command='JumpJointTo',j1=j1,j2=j2,j3=j3,j4=j4))
 
   def go_to(self, x:int, y:int, z:int, r:int=0):
